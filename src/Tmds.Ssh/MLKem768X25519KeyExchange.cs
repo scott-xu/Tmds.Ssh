@@ -73,7 +73,7 @@ sealed class MLKem768X25519KeyExchange : Curve25519KeyExchange
         return CalculateKeyExchangeOutput(input, sequencePool, sharedSecret, exchangeHash, _hashAlgorithmName);
     }
 
-    private byte[] DeriveSharedSecret(AsymmetricKeyParameter mlkem768PrivateKey, AsymmetricKeyParameter x25519PrivateKey, byte[] q_s)
+    private byte[] DeriveSharedSecret(AsymmetricKeyParameter mlkem768PrivateKey, AsymmetricKeyParameter x25519PrivateKey, byte[] s_reply)
     {
         var mlkem768Decapsulator = new MLKemDecapsulator(_mlKemParameters);
         mlkem768Decapsulator.Init(mlkem768PrivateKey);
@@ -83,9 +83,9 @@ sealed class MLKem768X25519KeyExchange : Curve25519KeyExchange
 
         var rawSecretAgreement = new byte[mlkem768Decapsulator.SecretLength + x25519Agreement.AgreementSize];
 
-        mlkem768Decapsulator.Decapsulate(q_s, 0, mlkem768Decapsulator.EncapsulationLength, rawSecretAgreement, 0, mlkem768Decapsulator.SecretLength);
+        mlkem768Decapsulator.Decapsulate(s_reply, 0, mlkem768Decapsulator.EncapsulationLength, rawSecretAgreement, 0, mlkem768Decapsulator.SecretLength);
 
-        var x25519PublicKey = new X25519PublicKeyParameters(q_s, mlkem768Decapsulator.EncapsulationLength);
+        var x25519PublicKey = new X25519PublicKeyParameters(s_reply, mlkem768Decapsulator.EncapsulationLength);
         x25519Agreement.CalculateAgreement(x25519PublicKey, rawSecretAgreement, mlkem768Decapsulator.SecretLength);
 
         var sharedSecret = SHA256.HashData(rawSecretAgreement);
